@@ -7,10 +7,30 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { parseStringPromise } from 'xml2js';
 
+interface RssChannel {
+  title: string[];
+  description?: string[];
+  item?: RssItem[];
+}
+
+interface RssItem {
+  title: string[];
+  link: string[];
+  description?: string[];
+}
+
+interface ParsedRss {
+  rss: {
+    channel: RssChannel[];
+  };
+}
+
 class RssToMdServer {
+  private server: Server;
+
   constructor() {
     this.server = new Server(
       {
@@ -28,7 +48,7 @@ class RssToMdServer {
     this.setupErrorHandlers();
   }
 
-  setupToolHandlers() {
+  private setupToolHandlers(): void {
     // List available tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [{
@@ -49,7 +69,7 @@ class RssToMdServer {
     }));
 
     // Handle rss_to_md tool
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    this.server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       if (request.params.name !== 'rss_to_md') {
         throw new McpError(
           ErrorCode.MethodNotFound,
@@ -67,8 +87,8 @@ class RssToMdServer {
 
       try {
         // Fetch and parse RSS feed
-        const response = await axios.get(url);
-        const parsed = await parseStringPromise(response.data);
+        const response: AxiosResponse<string> = await axios.get(url);
+        const parsed: ParsedRss = await parseStringPromise(response.data);
         
         // Convert to Markdown
         const markdown = this.convertToMarkdown(parsed);
@@ -79,16 +99,17 @@ class RssToMdServer {
             text: markdown
           }]
         };
-      } catch (error) {
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
         throw new McpError(
           ErrorCode.InternalError,
-          `Failed to process RSS feed: ${error.message}`
+          `Failed to process RSS feed: ${message}`
         );
       }
     });
   }
 
-  convertToMarkdown(parsed) {
+  private convertToMarkdown(parsed: ParsedRss): string {
     const channel = parsed.rss.channel[0];
     let markdown = `# ${channel.title[0]}\n\n`;
     
@@ -109,15 +130,15 @@ class RssToMdServer {
     return markdown;
   }
 
-  setupErrorHandlers() {
-    this.server.onerror = (error) => console.error('[MCP Error]', error);
+  private setupErrorHandlers(): void {
+    this.server.onerror = (error: Error) => console.error('[MCP Error]', error);
     process.on('SIGINT', async () => {
       await this.server.close();
       process.exit(0);
     });
   }
 
-  async run() {
+  public async run(): Promise<void> {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error('RSS to Markdown MCP server running on stdio');
@@ -125,4 +146,4 @@ class RssToMdServer {
 }
 
 const server = new RssToMdServer();
-server.run().catch(console.error);
+server.run().catch((error: Error) => console.error(error));

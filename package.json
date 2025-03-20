@@ -2,14 +2,17 @@
   "name": "mcp-rss-md",
   "version": "1.0.1",
   "description": "Convert RSS feeds to Markdown using the Model Context Protocol (MCP)",
-  "main": "rss-to-md-server.js",
+  "main": "dist/rss-to-md-server.js",
   "bin": {
-    "mcp-rss-md": "rss-to-md-server.js"
+    "mcp-rss-md": "dist/rss-to-md-server.js"
   },
   "directories": {
     "doc": "doc"
   },
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/rss-to-md-server.js",
+    "dev": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -35,5 +38,10 @@
     "@modelcontextprotocol/sdk": "^1.7.0",
     "axios": "^1.8.4",
     "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/xml2js": "^0.4.14",
+    "typescript": "^5.3.3"
   }
 }
