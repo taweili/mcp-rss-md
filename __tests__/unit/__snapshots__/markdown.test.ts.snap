@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Markdown Conversion should convert basic RSS feed to markdown 1`] = `
+"# Test Feed
+
+Test Description
+
+## Items
+
+- [Item 1](https://example.com/item1)
+  Item 1 Description
+"
+`;
+
+exports[`Markdown Conversion should handle missing description 1`] = `
+"# Test Feed
+
+## Items
+
+- [Item 1](https://example.com/item1)
+"
+`;

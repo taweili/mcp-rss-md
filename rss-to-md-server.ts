@@ -10,26 +10,27 @@ import {
 import axios, { AxiosResponse } from 'axios';
 import { parseStringPromise } from 'xml2js';
 
-interface RssChannel {
+export interface RssChannel {
   title: string[];
   description?: string[];
   item?: RssItem[];
 }
 
-interface RssItem {
+export interface RssItem {
   title: string[];
   link: string[];
   description?: string[];
 }
 
-interface ParsedRss {
+export interface ParsedRss {
   rss: {
     channel: RssChannel[];
   };
 }
 
-class RssToMdServer {
+export class RssToMdServer {
   private server: Server;
+  private toolHandler?: (request: any) => Promise<any>;
 
   constructor() {
     this.server = new Server(
@@ -46,6 +47,13 @@ class RssToMdServer {
 
     this.setupToolHandlers();
     this.setupErrorHandlers();
+  }
+
+  public async handleToolRequest(request: any): Promise<any> {
+    if (!this.toolHandler) {
+      throw new Error('Tool handler not initialized');
+    }
+    return this.toolHandler(request);
   }
 
   private setupToolHandlers(): void {
@@ -69,7 +77,7 @@ class RssToMdServer {
     }));
 
     // Handle rss_to_md tool
-    this.server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
+    const handler = async (request: any) => {
       if (request.params.name !== 'rss_to_md') {
         throw new McpError(
           ErrorCode.MethodNotFound,
@@ -106,7 +114,10 @@ class RssToMdServer {
           `Failed to process RSS feed: ${message}`
         );
       }
-    });
+    };
+
+    this.toolHandler = handler;
+    this.server.setRequestHandler(CallToolRequestSchema, handler);
   }
 
   private convertToMarkdown(parsed: ParsedRss): string {

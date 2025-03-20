@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`End-to-End Functionality should process RSS feed and convert to markdown 1`] = `
+{
+  "content": [
+    {
+      "text": "# Test Feed
+
+Test Description
+
+## Items
+
+- [Item 1](https://example.com/item1)
+  Item 1 Description
+",
+      "type": "text",
+    },
+  ],
+}
+`;
