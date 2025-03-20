@@ -1,8 +1,11 @@
 {
   "name": "mcp-rss-md",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Convert RSS feeds to Markdown using the Model Context Protocol (MCP)",
   "main": "rss-to-md-server.js",
+  "bin": {
+    "mcp-rss-md": "rss-to-md-server.js"
+  },
   "directories": {
     "doc": "doc"
   },
