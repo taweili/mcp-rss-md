@@ -1,18 +1,33 @@
 {
   "name": "mcp-rss-md",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Convert RSS feeds to Markdown using the Model Context Protocol (MCP)",
+  "main": "rss-to-md-server.js",
   "directories": {
     "doc": "doc"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "rss",
+    "markdown",
+    "mcp",
+    "converter",
+    "xml",
+    "md"
+  ],
+  "author": "David Li <taweili@gmail.com>",
+  "license": "GPL-3.0-only",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taweili/mcp-rss-md.git"
+  },
+  "bugs": {
+    "url": "https://github.com/taweili/mcp-rss-md/issues"
+  },
+  "homepage": "https://github.com/taweili/mcp-rss-md#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.7.0",
     "axios": "^1.8.4",
