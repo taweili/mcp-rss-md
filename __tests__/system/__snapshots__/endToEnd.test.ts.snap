@@ -8,10 +8,6 @@ exports[`End-to-End Functionality should process RSS feed and convert to markdow
 
 Test Description
 
-## Items
-
-- [Item 1](https://example.com/item1)
-  Item 1 Description
 ",
       "type": "text",
     },

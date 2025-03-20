@@ -21,14 +21,14 @@ describe('RSS Feed Processing', () => {
   test('should process valid RSS feed', async () => {
     const mockRss = `<?xml version="1.0"?>
 <rss version="2.0">
-  <channel>
-    <title>Test Feed</title>
-    <description>Test Description</description>
-    <item>
-      <title>Item 1</title>
-      <link>https://example.com/item1</link>
-    </item>
-  </channel>
+<channel>
+<title>Test Feed</title>
+<description>Test Description</description>
+<item>
+<title>Item 1</title>
+<link>https://example.com/item1</link>
+</item>
+</channel>
 </rss>`;
 
     (axios.get as jest.Mock).mockResolvedValue({ data: mockRss });
@@ -56,6 +56,9 @@ describe('RSS Feed Processing', () => {
 
     expect(result).toMatchSnapshot();
     expect(axios.get).toHaveBeenCalledWith('https://valid.example.com/feed');
-    expect(parseStringPromise).toHaveBeenCalledWith(mockRss);
+    expect(parseStringPromise).toHaveBeenCalledWith(mockRss, expect.objectContaining({
+      explicitArray: true,
+      explicitRoot: true
+    }));
   });
 });

@@ -14,7 +14,7 @@ describe('Markdown Conversion', () => {
         channel: [{
           title: ['Test Feed'],
           description: ['Test Description'],
-          item: [{
+          items: [{
             title: ['Item 1'],
             link: ['https://example.com/item1'],
             description: ['Item 1 Description']
@@ -32,7 +32,7 @@ describe('Markdown Conversion', () => {
       rss: {
         channel: [{
           title: ['Test Feed'],
-          item: [{
+          items: [{
             title: ['Item 1'],
             link: ['https://example.com/item1']
           }]

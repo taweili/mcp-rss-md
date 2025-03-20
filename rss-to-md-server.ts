@@ -13,18 +13,37 @@ import { parseStringPromise } from 'xml2js';
 export interface RssChannel {
   title: string[];
   description?: string[];
-  item?: RssItem[];
+  link?: string[];
+  items?: RssItem[];
 }
 
 export interface RssItem {
-  title: string[];
-  link: string[];
-  description?: string[];
+  title: Array<string | { _: string }>;
+  link: Array<string | { href: string }>;
+  description?: Array<string | { _: string }>;
 }
 
 export interface ParsedRss {
-  rss: {
+  rss?: {
     channel: RssChannel[];
+  };
+  'rdf:RDF'?: {
+    channel: {
+      'rdf:about'?: string;
+      title?: string[];
+      description?: string[];
+      link?: string[];
+      'dc:language'?: string[];
+      'dc:rights'?: string[];
+      'dc:date'?: string[];
+      'dc:publisher'?: string[];
+      'dc:creator'?: string[];
+      'dc:subject'?: string[];
+      'syn:updateBase'?: string[];
+      'syn:updateFrequency'?: string[];
+      'syn:updatePeriod'?: string[];
+    }[];
+    item?: RssItem[];
   };
 }
 
@@ -96,7 +115,29 @@ export class RssToMdServer {
       try {
         // Fetch and parse RSS feed
         const response: AxiosResponse<string> = await axios.get(url);
-        const parsed: ParsedRss = await parseStringPromise(response.data);
+        const parsed: ParsedRss = await parseStringPromise(response.data, {
+          explicitArray: true,   // Force arrays for consistent parsing
+          mergeAttrs: false,     // Keep attributes separate
+          explicitCharkey: true,
+          explicitRoot: true,    // Preserve root element
+          ignoreAttrs: false,
+          xmlns: true,
+          tagNameProcessors: [(name) => {
+            // Handle default RSS 1.0 namespace
+            if (name === 'RDF' || name === 'Channel' || name === 'item') {
+              return name.toLowerCase() === 'rdf' ? 'rdf:RDF' : name;
+            }
+            // Preserve RDF namespace prefix
+            if (name.startsWith('rdf:')) return name;
+            // Strip other namespace prefixes
+            return name.replace(/^.*:/, '');
+          }]
+        });
+        
+        // Validate basic RSS structure
+        if (!parsed.rss && !parsed['rdf:RDF']) {
+          throw new Error(`Invalid RSS feed - received content: ${response.data.substring(0, 200)}`);
+        }
         
         // Convert to Markdown
         const markdown = this.convertToMarkdown(parsed);
@@ -108,6 +149,7 @@ export class RssToMdServer {
           }]
         };
       } catch (error: unknown) {
+        console.error(`RSS processing failed for ${url}:`, error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         throw new McpError(
           ErrorCode.InternalError,
@@ -121,19 +163,57 @@ export class RssToMdServer {
   }
 
   private convertToMarkdown(parsed: ParsedRss): string {
-    const channel = parsed.rss.channel[0];
+    let channel: RssChannel | undefined;
+    
+    // Handle RSS 2.0 format
+    if (parsed.rss?.channel?.[0]) {
+      channel = parsed.rss.channel[0];
+    }
+    // Handle RSS 1.0/RDF format
+    else if (parsed['rdf:RDF']?.channel?.[0]) {
+      const rdfChannel = parsed['rdf:RDF'].channel[0];
+      channel = {
+        title: rdfChannel.title || ['Untitled'],
+        description: rdfChannel.description,
+        link: rdfChannel.link,
+        items: parsed['rdf:RDF'].item
+      };
+    }
+
+    if (!channel) {
+      throw new Error('Invalid RSS feed: missing channel');
+    }
+
+    // Validate channel title
+    if (!channel.title || !channel.title[0]) {
+      throw new Error('Invalid RSS feed: missing channel title');
+    }
+    
     let markdown = `# ${channel.title[0]}\n\n`;
     
-    if (channel.description) {
+    // Add description if present
+    if (channel.description && channel.description[0]) {
       markdown += `${channel.description[0]}\n\n`;
     }
 
-    if (channel.item) {
+    // Process items if present
+    if (channel.items) {
       markdown += '## Items\n\n';
-      channel.item.forEach(item => {
-        markdown += `- [${item.title[0]}](${item.link[0]})\n`;
+      channel.items.forEach(item => {
+        // Validate required item fields
+        if (!item.title || !item.title[0]) {
+          throw new Error('Invalid RSS feed: missing item title');
+        }
+        if (!item.link || !item.link[0]) {
+          throw new Error('Invalid RSS feed: missing item link');
+        }
+
+        const title = typeof item.title[0] === 'object' ? item.title[0]._ : item.title[0];
+        const link = typeof item.link[0] === 'object' ? item.link[0].href : item.link[0];
+        markdown += `- [${title}](${link})\n`;
         if (item.description) {
-          markdown += `  ${item.description[0]}\n`;
+          const desc = typeof item.description[0] === 'object' ? item.description[0]._ : item.description[0];
+          markdown += `  ${desc}\n`;
         }
       });
     }
@@ -152,7 +232,7 @@ export class RssToMdServer {
   public async run(): Promise<void> {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error('RSS to Markdown MCP server running on stdio');
+    // console.log('RSS to Markdown MCP server running on stdio'); // Removed for test cleanliness
   }
 }
 

@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RSS Feed Validation Error Handling should handle malformed RSS feeds 1`] = `
+{
+  "content": [
+    {
+      "text": "# Test Feed
+
+",
+      "type": "text",
+    },
+  ],
+}
+`;
+
+exports[`RSS Feed Validation Field Extraction should extract all relevant fields 1`] = `
+{
+  "content": [
+    {
+      "text": "# Test Feed
+
+Test Description
+
+",
+      "type": "text",
+    },
+  ],
+}
+`;

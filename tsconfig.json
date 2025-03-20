@@ -15,5 +15,5 @@
     "declaration": true
   },
   "include": ["**/*"],
-  "exclude": ["node_modules", "dist", "coverage"]
+  "exclude": ["node_modules", "dist", "coverage", "**/*.d.ts"]
 }

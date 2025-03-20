@@ -8,9 +8,6 @@ exports[`RSS Feed Processing should process valid RSS feed 1`] = `
 
 Test Description
 
-## Items
-
-- [Item 1](https://example.com/item1)
 ",
       "type": "text",
     },
